@@ -4,7 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import router from '#routes/auth.routes.js';
+import authRouter from '#routes/auth.routes.js';
+import userRouter from '#routes/users.routes.js';
 import { timestamp } from 'drizzle-orm/gel-core';
 import { securityMiddleware } from '#middleware/security.middleware.js';
 
@@ -39,6 +40,7 @@ app.get('/api', (req, res) => {
   })
 })
 
-app.use('/api/auth' , router)
+app.use('/api/auth' , authRouter)
+app.use('/api/users', userRouter)
 
 export default app;
