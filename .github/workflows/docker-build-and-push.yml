@@ -94,6 +94,6 @@ jobs:
       - name: Build failure notification
         if: failure()
         run: |
-          echo "::error:: Docker build failed - please check the build logs above for details"
-          # FIX 5: Corrected typo 'correclty' → 'correctly'
-          echo "::notice:: Ensure your Dockerfile is properly configured and secrets are set correctly"
+          echo "::error:: Docker build failed - please check the build logs above for details."
+          # FIX 5: Corrected typo 'correclty' → 'correctly.'
+          echo "::notice:: Ensure your Dockerfile is properly configured and secrets are set correctly."
