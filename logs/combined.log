@@ -108,3 +108,6 @@
 {"level":"info","message":"::1 - - [01/Jun/2026:07:26:23 +0000] \"GET /health HTTP/1.1\" 200 78 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"acquisitions-apie"}
 {"level":"info","message":"::1 - - [01/Jun/2026:07:26:30 +0000] \"GET /health HTTP/1.1\" 200 78 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"acquisitions-apie"}
 {"level":"info","message":"::1 - - [01/Jun/2026:07:26:31 +0000] \"GET /health HTTP/1.1\" 200 78 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"acquisitions-apie"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [12/Jun/2026:10:02:04 +0000] \"GET /health HTTP/1.1\" 200 73 \"-\" \"-\"","service":"acquisitions-apie"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [12/Jun/2026:10:02:05 +0000] \"GET /api HTTP/1.1\" 200 39 \"-\" \"-\"","service":"acquisitions-apie"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [12/Jun/2026:10:02:05 +0000] \"GET /nonexistent HTTP/1.1\" 404 28 \"-\" \"-\"","service":"acquisitions-apie"}

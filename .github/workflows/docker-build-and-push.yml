@@ -1,0 +1,100 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag_suffix:
+        description: 'Additional tag suffix (optional)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/acquisitions
+
+jobs:
+  docker-build-and-push:
+    name: Build and publish production Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          platforms: linux/amd64, linux/arm64
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+        registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Branch-based tags
+            type=ref,event=branch
+            # SHA-based tags
+            type=sha,prefix={{branch}}-,format=short
+            # Latest tag for main branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Production timestamp tag
+            type=raw,value=prod-{{date 'YYYYMMDD-HHmmss' tz='UTC'}},enable={{is_default_branch}}
+            # Custom suffix if provided
+            type=raw,value={{branch}}${{ inputs.tag_suffix && format('-{0}' , inputs,tag_suffix) || ''}}
+          labels:
+            org.opencontainers.image.title=Acquisitions API
+            org.opencontainers.image.description=Node.js Express API for acquisition system
+            org.opencontainers.image.vendor=Kamba Tshibangu
+            org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
+
+      - name: Build and push production image
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            BUILD_DATE={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
+            GIT_SHA=${{ github.sha }}
+            GIT_REF=${{ github.ref_name }}
+
+      - name: Generate build summary
+        if: success()
+        run: |
+          echo "## Docker Image Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${{ env.IMAGE_NAME }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tags:" >> "$GITHUB_STEP_SUMMARY"
+          while IFS= read -r tag; do
+            if [[ -n "$tag" ]]; then
+              echo "  - \`$tag\`" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done <<< "${{ steps.meta.outputs.tags }}"
+
+
+      - name: Build failure notification
+        if: failure()
+        run: |
+          echo "::error:: Docker build failed - please check the build logs above for details"
+          echo "::notice:: Ensure your Dockerfile is properly configured and secrets are set correclty"
