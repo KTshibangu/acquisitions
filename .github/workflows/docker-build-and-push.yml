@@ -31,14 +31,13 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker-container
-          platforms: linux/amd64, linux/arm64
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract Docker metadata
         id: meta
@@ -46,21 +45,21 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Branch-based tags
             type=ref,event=branch
-            # SHA-based tags
             type=sha,prefix={{branch}}-,format=short
-            # Latest tag for main branch
             type=raw,value=latest,enable={{is_default_branch}}
-            # Production timestamp tag
             type=raw,value=prod-{{date 'YYYYMMDD-HHmmss' tz='UTC'}},enable={{is_default_branch}}
-            # Custom suffix if provided
-            type=raw,value={{branch}}${{ inputs.tag_suffix && format('-{0}' , inputs,tag_suffix) || ''}}
-          labels:
+            # FIX 2: Changed 'inputs,tag_suffix' → 'inputs.tag_suffix'
+            type=raw,value={{branch}}${{ inputs.tag_suffix && format('-{0}', inputs.tag_suffix) || ''}}
+          labels: |
             org.opencontainers.image.title=Acquisitions API
             org.opencontainers.image.description=Node.js Express API for acquisition system
             org.opencontainers.image.vendor=Kamba Tshibangu
             org.opencontainers.image.created={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
+
+      - name: Set build timestamp
+        id: timestamp
+        run: echo "value=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
 
       - name: Build and push production image
         id: docker_build
@@ -76,7 +75,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NODE_ENV=production
-            BUILD_DATE={{date 'YYYY-MM-DDTHH:mm:ssZ'}}
+            BUILD_DATE=${{ steps.timestamp.outputs.value }}
             GIT_SHA=${{ github.sha }}
             GIT_REF=${{ github.ref_name }}
 
@@ -92,9 +91,9 @@ jobs:
             fi
           done <<< "${{ steps.meta.outputs.tags }}"
 
-
       - name: Build failure notification
         if: failure()
         run: |
           echo "::error:: Docker build failed - please check the build logs above for details"
-          echo "::notice:: Ensure your Dockerfile is properly configured and secrets are set correclty"
+          # FIX 5: Corrected typo 'correclty' → 'correctly'
+          echo "::notice:: Ensure your Dockerfile is properly configured and secrets are set correctly"
